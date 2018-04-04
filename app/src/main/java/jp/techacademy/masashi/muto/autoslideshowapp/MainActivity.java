@@ -58,6 +58,10 @@ public class MainActivity extends AppCompatActivity {
             case PERMISSIONS_REQUEST_CODE:
                 if (grantResults[0] == PackageManager.PERMISSION_GRANTED) {
                     getContentsInfo();
+                } else {
+                    mStartPauseButton.setEnabled(false);
+                    mNextButton.setEnabled(false);
+                    mBackButton.setEnabled(false);
                 }
                 break;
             default:
@@ -97,27 +101,37 @@ public class MainActivity extends AppCompatActivity {
                         mTimer.schedule(new TimerTask() {
                             @Override
                             public void run() {
-                                mHandler.post(new Runnable() {
-                                    @Override
-                                    public void run() {
-                                        if (cursor.moveToNext()) {
-                                            int fieldIndex = cursor.getColumnIndex(MediaStore.Images.Media._ID);
-                                            Long id = cursor.getLong(fieldIndex);
-                                            Uri imageUri = ContentUris.withAppendedId(MediaStore.Images.Media.EXTERNAL_CONTENT_URI, id);
+                                try {
+                                    mHandler.post(new Runnable() {
+                                        @Override
+                                        public void run() {
+                                            try {
+                                                if (cursor.moveToNext()) {
+                                                    int fieldIndex = cursor.getColumnIndex(MediaStore.Images.Media._ID);
+                                                    Long id = cursor.getLong(fieldIndex);
+                                                    Uri imageUri = ContentUris.withAppendedId(MediaStore.Images.Media.EXTERNAL_CONTENT_URI, id);
 
-                                            ImageView imageView = (ImageView) findViewById(R.id.imageView);
-                                            imageView.setImageURI(imageUri);
-                                        } else {
-                                            cursor.moveToFirst();
-                                            int fieldIndex = cursor.getColumnIndex(MediaStore.Images.Media._ID);
-                                            Long id = cursor.getLong(fieldIndex);
-                                            Uri imageUri = ContentUris.withAppendedId(MediaStore.Images.Media.EXTERNAL_CONTENT_URI, id);
+                                                    ImageView imageView = (ImageView) findViewById(R.id.imageView);
+                                                    imageView.setImageURI(imageUri);
+                                                } else {
+                                                    cursor.moveToFirst();
+                                                    int fieldIndex = cursor.getColumnIndex(MediaStore.Images.Media._ID);
+                                                    Long id = cursor.getLong(fieldIndex);
+                                                    Uri imageUri = ContentUris.withAppendedId(MediaStore.Images.Media.EXTERNAL_CONTENT_URI, id);
 
-                                            ImageView imageView = (ImageView) findViewById(R.id.imageView);
-                                            imageView.setImageURI(imageUri);
+                                                    ImageView imageView = (ImageView) findViewById(R.id.imageView);
+                                                    imageView.setImageURI(imageUri);
+                                                }
+                                            } catch (NullPointerException e) {
+                                                Toast toast = Toast.makeText(MainActivity.this, "許可しなければ表示されません", Toast.LENGTH_LONG);
+                                                toast.show();
+                                            }
                                         }
-                                    }
-                                });
+                                    });
+                                } catch (NullPointerException e) {
+                                    Toast toast = Toast.makeText(MainActivity.this, "許可しなければ表示されません", Toast.LENGTH_LONG);
+                                    toast.show();
+                                }
                             }
                         }, 2000, 2000);
                     } else {
@@ -191,7 +205,11 @@ public class MainActivity extends AppCompatActivity {
 
     @Override
     protected void onDestroy() {
-        super.onDestroy();
-        cursor.close();
+        try {
+            super.onDestroy();
+            cursor.close();
+        } catch (NullPointerException e) {
+
+        }
     }
 }
